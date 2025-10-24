@@ -15,29 +15,22 @@
     ny = 4
     nz = 10
     xmin = 0
-    xmax = 1
+    xmax = 10
     ymin = 0
-    ymax = 1.5
+    ymax = 10
     zmin = 0
-    zmax = 2
+    zmax = 20
   []
-  [rename_block1]
+  [rename_block]
     type = SubdomainBoundingBoxGenerator
     input = whole_mesh
     bottom_left = '0 0 0'
-    top_right = '1 1 1'
+    top_right = '10 10 10'
     block_id = 1
-  []
-  [rename_block2]
-    type = SubdomainBoundingBoxGenerator
-    input = rename_block1
-    bottom_left = '0 0 1'
-    top_right = '1 1 2'
-    block_id = 2
-  []
+  []    
   [rename] # seems to be needed for generated shoebox!!!
     type = RenameBoundaryGenerator
-    input = rename_block2
+    input = rename_block
     old_boundary = 'left right front back top  bottom'
     new_boundary = 'blah blah  blah  blah blah blah'
   []
@@ -49,61 +42,7 @@
     normals =    '0 0 -1  0 0 1  -1 0 0  1 0 0  0 1 0  0 -1 0'
     replace = true
   []
- 
 []
-# [Mesh]
-#   [copper]
-#     type = GeneratedMeshGenerator
-#     dim = 3
-#     elem_type = HEX8
-#     nx = 2
-#     ny = 6
-#     nz = 10
-#   []
-#   [copper_id]
-#     type = SubdomainIDGenerator
-#     input = copper
-#     subdomain_id = 0
-#   []
-#   [brass]
-#     type = GeneratedMeshGenerator
-#     dim = 3
-#     zmax = 2
-#     zmin = 1
-#     nx = 2
-#     ny = 6
-#     nz = 10
-#     elem_type = HEX8
-#   []
-#   [brass_id]
-#     type = SubdomainIDGenerator
-#     input = brass
-#     subdomain_id = 1
-#   []
-#   [steel]
-#     type = GeneratedMeshGenerator
-#     dim = 3
-#     zmax = 2
-#     zmin = 0
-#     ymin = 1
-#     ymax = 1.5
-#     nx = 2
-#     ny = 3
-#     nz = 20
-#     elem_type = HEX8
-#   []
-#   [steel_id]
-#     type = SubdomainIDGenerator
-#     input = steel
-#     subdomain_id = 2
-#   []
-#   [sticher]
-#     type = StitchedMeshGenerator
-#     inputs = 'copper_id brass_id steel_id'
-#     stitch_boundaries_pairs = 'front back; bottom top'
-#     prevent_boundary_ids_overlap = false
-#   []
-# []
 
 ######################################################################################################
 # Aux Variables
@@ -142,16 +81,6 @@
     family = MONOMIAL
     block = 1
   []
-  [steel_gss]
-    order = CONSTANT
-    family = MONOMIAL
-    block = 2
-  []
-  [steel_slip_increment]
-    order = CONSTANT
-    family = MONOMIAL
-    block = 2
-  []
 []
 
 ######################################################################################################
@@ -174,14 +103,6 @@
     generate_output = stress_zz
     block = 1
     base_name = brass
-  []
-  [steel]
-    strain = FINITE
-    incremental = true
-    add_variables = true
-    generate_output = stress_zz
-    block = 2
-    base_name = steel
   []
 []
 
@@ -246,22 +167,6 @@
     block = 1
     execute_on = timestep_end
   []
-  [gss_steel]
-    type = MaterialStdVectorAux
-    variable = steel_gss
-    property = steel_slip_resistance
-    index = 0
-    block = 2
-    execute_on = timestep_end
-  []
-  [slip_inc_steel]
-    type = MaterialStdVectorAux
-    variable = steel_slip_increment
-    property = steel_slip_increment
-    index = 0
-    block = 2
-    execute_on = timestep_end
-  []
 []
 
 ######################################################################################################
@@ -291,7 +196,7 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top
-    function = '-0.005*t'
+    function = '-0.001*t'
   []
 []
 
@@ -345,27 +250,6 @@
     base_name = brass
     block = 1
   []
-  [elasticity_tensor_steel]
-    type = ComputeElasticityTensorCP
-    C_ijkl = '1.7e5 1.3e5 1.3e5 1.7e5 1.3e5 1.7e5 0.8e5 0.8e5 0.8e5'
-    fill_method = symmetric9
-    base_name = steel
-    block = 2
-  []
-  [stress_steel]
-    type = ComputeMultipleCrystalPlasticityStress
-    crystal_plasticity_models = 'trial_xtalpl_steel'
-    tan_mod_type = exact
-    base_name = steel
-    block = 2
-  []
-  [trial_xtalpl_steel]
-    type = CrystalPlasticityKalidindiUpdate
-    number_slip_systems = 12
-    slip_sys_file_name = input_slip_sys.txt
-    base_name = steel
-    block = 2
-  []
 []
 
 ######################################################################################################
@@ -382,11 +266,6 @@
     type = ElementAverageValue
     variable = brass_stress_zz
     block = 1
-  []
-  [steel_stress_zz]
-    type = ElementAverageValue
-    variable = brass_stress_zz
-    block = 2
   []
   [pk2]
     type = ElementAverageValue
@@ -420,16 +299,6 @@
     variable = brass_slip_increment
     block = 1
   []
-  [steel_gss]
-    type = ElementAverageValue
-    variable = steel_gss
-    block = 2
-  []
-  [steel_slip_increment]
-    type = ElementAverageValue
-    variable = steel_slip_increment
-    block = 2
-  []
 []
 
 ######################################################################################################
@@ -451,16 +320,16 @@
   type = Transient
   solve_type = 'PJFNK'
 
-  petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -ksp_type -ksp_gmres_restart -ksp_max_it'
-  petsc_options_value = ' asm      2              lu            gmres     200   10'
+  petsc_options_iname = '-pc_type -sub_pc_type -ksp_type -ksp_max_it'
+  petsc_options_value = 'asm ilu gmres 10'
   nl_abs_tol = 1e-8
   nl_rel_tol = 1e-6
   nl_abs_step_tol = 1e-8
 
-  dt = 0.5
-  dtmin = 0.1
-  dtmax = 10.0
-  end_time = 400
+  dt = 100
+  dtmin = 0.5
+  dtmax = 100.0
+  end_time = 1e4
 []
 
 ######################################################################################################

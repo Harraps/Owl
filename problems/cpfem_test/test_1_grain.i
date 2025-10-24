@@ -12,19 +12,19 @@
     dim = 3
     elem_type = HEX8
     # Traction test #########################
-    # nx = 3
-    # ny = 3
+    # nx = 4
+    # ny = 4
     # nz = 6
     # Simple shear test ####################
-    nx = 3
+    nx = 4
     ny = 6
-    nz = 3
+    nz = 4
     xmin = 0
-    xmax = 1
+    xmax = 10
     ymin = 0
-    ymax = 1
+    ymax = 10
     zmin = 0
-    zmax = 1
+    zmax = 10
   []
   [rename] # seems to be needed for generated shoebox!!!
     type = RenameBoundaryGenerator
@@ -137,7 +137,7 @@
 # BCs
 ######################################################################################################
 
-# Uniaxial traction ##############################################################################
+# Uniaxial traction with pressure ##############################################################################
 # [BCs]
 #   [symmx]
 #     type = DirichletBC
@@ -161,12 +161,67 @@
 #     type = Pressure
 #     variable = disp_z
 #     boundary = right
-#     function = traction
-#     factor = -500.0
+#     function = traction_pressure
 #   []
 # []
 
-# Simple shear #########################################################################################
+# Simple shear with pressure #########################################################################################
+# [BCs]
+#   [symmx]
+#     type = DirichletBC
+#     variable = disp_x
+#     boundary = bottom
+#     value = 0
+#   []
+#   [symmy]
+#     type = DirichletBC
+#     variable = disp_y
+#     boundary = bottom
+#     value = 0
+#   []  
+#   [symmz]
+#     type = DirichletBC
+#     variable = disp_z
+#     boundary = bottom
+#     value = 0
+#   []
+#   [sdisp]
+#     type = FunctionNeumannBC
+#     variable = disp_z
+#     boundary = top
+#     function = shear_pressure
+#   []
+# []
+
+# Uniaxial traction with pressure ##############################################################################
+# [BCs]
+#   [symmx]
+#     type = DirichletBC
+#     variable = disp_x
+#     boundary = left
+#     value = 0
+#   []
+#   [symmy]
+#     type = DirichletBC
+#     variable = disp_y
+#     boundary = left
+#     value = 0
+#   []  
+#   [symmz]
+#     type = DirichletBC
+#     variable = disp_z
+#     boundary = left
+#     value = 0
+#   []
+#   [tdisp]
+#     type = Pressure
+#     variable = disp_z
+#     boundary = right
+#     function = traction_displacement
+#   []
+# []
+
+# Simple shear with pressure #########################################################################################
 [BCs]
   [symmx]
     type = DirichletBC
@@ -187,10 +242,10 @@
     value = 0
   []
   [sdisp]
-    type = FunctionNeumannBC
+    type = FunctionDirichletBC
     variable = disp_z
     boundary = top
-    function = shear
+    function = shear_displacement
   []
 []
 
@@ -199,15 +254,25 @@
 ######################################################################################################
 
 [Functions]
-  [traction]
+  [traction_pressure]
     type = PiecewiseLinear
-    x = '0 1 2 3'
-    y = '0 1 1 0'
+    x = '0 1e8'
+    y = '0 -500'
   []
-  [shear]
+  [shear_pressure]
     type = PiecewiseLinear
-    x = '0 1e7 2e7 2.1e7'
+    x = '0 1e8 2e8 2.1e8'
     y = '0 30 30 0'
+  []
+  [traction_displacement]
+    type = PiecewiseLinear
+    x = '0 1e8'
+    y = '0 1'
+  []
+  [shear_displacement]
+    type = PiecewiseLinear
+    x = '0 1e5'
+    y = '0 -2'
   []
 []
 
@@ -227,7 +292,7 @@
   [stress_copper]
     type = ComputeMultipleCrystalPlasticityStress
     crystal_plasticity_models = 'trial_xtalpl_copper'
-    tan_mod_type = none
+    tan_mod_type = exact
     base_name = copper
     block = 0
   []
@@ -294,15 +359,15 @@
   solve_type = PJFNK
 
   petsc_options_iname = '-pc_type -sub_pc_type -ksp_type -ksp_max_it'
-  petsc_options_value = 'asm ilu gmres 15'
+  petsc_options_value = 'asm ilu gmres 10'
 
   nl_abs_tol = 1e-8
   nl_rel_tol = 1e-6
   nl_abs_step_tol = 1e-8
 
-  dt = 1e5
-  dtmin = 1e4
-  end_time = 2.1e7
+  dt = 1000
+  dtmin = 10
+  end_time = 1e5
 []
 
 ######################################################################################################
