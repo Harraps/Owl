@@ -287,6 +287,12 @@
     boundary = bottom
     value = 0
   []
+  [symmz2]
+    type = DirichletBC
+    variable = disp_z
+    boundary = top
+    value = 0
+  []
   [tdisp]
     type = FunctionDirichletBC
     variable = disp_z
@@ -317,7 +323,7 @@
   [trial_xtalpl_copper]
     type = CrystalPlasticityKalidindiUpdate
     number_slip_systems = 12
-    slip_sys_file_name = input_slip_sys.txt
+    slip_sys_file_name = input_slip_sys_12.txt
     base_name = copper
     block = 0
   []
@@ -341,7 +347,7 @@
   [trial_xtalpl_brass]
     type = CrystalPlasticityKalidindiUpdate
     number_slip_systems = 12
-    slip_sys_file_name = input_slip_sys.txt
+    slip_sys_file_name = input_slip_sys_12.txt
     base_name = brass
     block = 1
   []
@@ -362,7 +368,7 @@
   [trial_xtalpl_steel]
     type = CrystalPlasticityKalidindiUpdate
     number_slip_systems = 12
-    slip_sys_file_name = input_slip_sys.txt
+    slip_sys_file_name = input_slip_sys_12.txt
     base_name = steel
     block = 2
   []
@@ -432,16 +438,6 @@
   []
 []
 
-######################################################################################################
-# Preconditioning
-######################################################################################################
-
-[Preconditioning]
-  [smp]
-    type = SMP
-    full = true
-  []
-[]
 
 ######################################################################################################
 # Executioner
